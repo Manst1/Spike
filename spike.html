@@ -1,0 +1,1915 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Spike</title>
+  <link rel="icon" type="image/png" href="https://i.imgur.com/VtHqQHA.png">  
+  <style>
+    html, body { height:100%; margin:0; background:#1a1412; color:#f2e9e4; font-family:system-ui,Segoe UI,Roboto,Arial; }
+    .wrap { display:grid; grid-template-rows:auto 1fr auto; height:100%; }
+    header, footer { padding:10px 14px; background:#241c19; border-bottom:1px solid rgba(255,255,255,.08); }
+    footer { border-top:1px solid rgba(255,255,255,.08); border-bottom:none; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    button {
+      background:#3a2a24; color:#f2e9e4; border:1px solid rgba(255,255,255,.12);
+      padding:6px 10px; border-radius:10px; cursor:pointer;
+    }
+    button:hover { filter:brightness(1.08); }
+    .hud { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .pill { padding:4px 10px; background:#2f2420; border:1px solid rgba(255,255,255,.10); border-radius:999px; }
+    canvas { width:100%; height:100%; display:block; background:linear-gradient(#2a1f1b, #15100f); }
+    .hint { opacity:.9; font-size:13px; }
+    .small { font-size:12px; opacity:.85; }
+    code { opacity:.9; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="row">
+      <strong>🧗 Parkour Speedrun</strong>
+      <span class="hint">Steuerung: <b>A/D</b> oder <b>←/→</b>, <b>W</b>/<b>Space</b> springen, <b>R</b> restart level</span>
+    </div>
+  </header>
+
+  <canvas id="c"></canvas>
+
+  <footer>
+    <div class="hud">
+      <span class="pill" id="runPill">Run: 00:00.000</span>
+      <span class="pill" id="lvlPill">Level: 1</span>
+      <span class="pill" id="coinPill">Coins: 0</span>
+      <span class="pill" id="keysPill">Keys: —</span>
+      <span class="pill" id="deathPill">Deaths: 0</span>
+    </div>
+
+    <div class="row">
+      <button id="btnRestart">↻ Restart Level (R)</button>
+      <button id="btnResetRun">⟲ Reset Run</button>
+    </div>
+
+    <div class="small">
+      Speedrun-Regel: Levels laufen <b>in Reihenfolge</b>. Keine Auswahl/Skip.
+      Level baust du mit <code>editor.html</code> und kopierst den Export hier rein.
+    </div>
+  </footer>
+</div>
+
+<script>
+/* =========================
+   1) LEVELS: HIER KOMMT DEIN EXPORT REIN
+   ========================= */
+const LEVELS = [
+{
+  "name": "Neues Level",
+  "settings": {
+    "bg": "dusk",
+    "gravity": 1700
+  },
+  "player": {
+    "x": 100,
+    "y": 280
+  },
+  "goal": {
+    "x": 700,
+    "y": 220,
+    "w": 60,
+    "h": 80
+  },
+  "objects": [
+    {
+      "t": "solid",
+      "x": 80,
+      "y": 320,
+      "w": 360,
+      "h": 120
+    },
+    {
+      "t": "solid",
+      "x": 440,
+      "y": 320,
+      "w": 360,
+      "h": 120
+    },
+    {
+      "t": "spike",
+      "x": 400,
+      "y": 280,
+      "w": 120,
+      "h": 30
+    },
+    {
+      "t": "spike",
+      "x": -720,
+      "y": 1040,
+      "w": 2060,
+      "h": 140
+    }
+  ]
+},
+{
+  "name": "Neues Level",
+  "settings": {
+    "bg": "dusk",
+    "gravity": 1700
+  },
+  "player": {
+    "x": 80,
+    "y": 260
+  },
+  "goal": {
+    "x": 1800,
+    "y": 480,
+    "w": 60,
+    "h": 80
+  },
+  "objects": [
+    {
+      "t": "solid",
+      "x": -100,
+      "y": 320,
+      "w": 520,
+      "h": 120
+    },
+    {
+      "t": "solid",
+      "x": 480,
+      "y": 400,
+      "w": 160,
+      "h": 30
+    },
+    {
+      "t": "bounce",
+      "x": 740,
+      "y": 520,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 920,
+      "y": 600,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1040,
+      "y": 580,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1180,
+      "y": 640,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1320,
+      "y": 580,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1460,
+      "y": 540,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "spike",
+      "x": -520,
+      "y": 1180,
+      "w": 2920,
+      "h": 80
+    }
+  ]
+},
+
+{
+  "name": "Neues Level",
+  "settings": {
+    "bg": "dusk",
+    "gravity": 1700
+  },
+  "player": {
+    "x": 80,
+    "y": 260
+  },
+  "goal": {
+    "x": 1900,
+    "y": 340,
+    "w": 60,
+    "h": 80
+  },
+  "objects": [
+    {
+      "t": "solid",
+      "x": -160,
+      "y": 320,
+      "w": 520,
+      "h": 200
+    },
+    {
+      "t": "spike",
+      "x": 240,
+      "y": 300,
+      "w": 120,
+      "h": 30
+    },
+    {
+      "t": "bounce",
+      "x": 520,
+      "y": 400,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 820,
+      "y": 400,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "solid",
+      "x": 1000,
+      "y": 400,
+      "w": 160,
+      "h": 30
+    },
+    {
+      "t": "key",
+      "x": 1080,
+      "y": 360,
+      "w": 18,
+      "h": 18,
+      "keyId": "A"
+    },
+    {
+      "t": "solid",
+      "x": 1260,
+      "y": 400,
+      "w": 160,
+      "h": 30
+    },
+    {
+      "t": "door",
+      "x": 1360,
+      "y": 280,
+      "w": 50,
+      "h": 100,
+      "keyId": "A"
+    },
+    {
+      "t": "bounce",
+      "x": 1580,
+      "y": 500,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1740,
+      "y": 500,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "spike",
+      "x": -540,
+      "y": 1140,
+      "w": 3260,
+      "h": 100
+    }
+  ]
+},
+
+{
+  "name": "Neues Level",
+  "settings": {
+    "bg": "dusk",
+    "gravity": 1700
+  },
+  "player": {
+    "x": 80,
+    "y": 260
+  },
+  "goal": {
+    "x": 3420,
+    "y": 1360,
+    "w": 60,
+    "h": 80
+  },
+  "objects": [
+    {
+      "t": "spike",
+      "x": -840,
+      "y": 1760,
+      "w": 5000,
+      "h": 140
+    },
+    {
+      "t": "spike",
+      "x": -2620,
+      "y": 1760,
+      "w": 1780,
+      "h": 140
+    },
+    {
+      "t": "water",
+      "x": -180,
+      "y": 300,
+      "w": 600,
+      "h": 300
+    },
+    {
+      "t": "solid",
+      "x": 320,
+      "y": 700,
+      "w": 320,
+      "h": 80
+    },
+    {
+      "t": "bounce",
+      "x": 720,
+      "y": 880,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "water",
+      "x": 1160,
+      "y": 1000,
+      "w": 260,
+      "h": 180
+    },
+    {
+      "t": "solid",
+      "x": 1500,
+      "y": 1240,
+      "w": 160,
+      "h": 30
+    },
+    {
+      "t": "solid",
+      "x": 1800,
+      "y": 1700,
+      "w": 160,
+      "h": 30
+    },
+    {
+      "t": "solid",
+      "x": 2220,
+      "y": 1700,
+      "w": 160,
+      "h": 30
+    },
+    {
+      "t": "solid",
+      "x": 2080,
+      "y": 1700,
+      "w": 160,
+      "h": 30
+    },
+    {
+      "t": "lowgrav",
+      "x": 2420,
+      "y": 1540,
+      "w": 240,
+      "h": 200,
+      "gMul": 0.5
+    },
+    {
+      "t": "bounce",
+      "x": 2680,
+      "y": 1560,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 2940,
+      "y": 1500,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 3220,
+      "y": 1420,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "solid",
+      "x": 1000,
+      "y": 1200,
+      "w": 140,
+      "h": 40
+    }
+  ]
+},
+
+{
+  "name": "Neues Level",
+  "settings": {
+    "bg": "dusk",
+    "gravity": 1700
+  },
+  "player": {
+    "x": 80,
+    "y": 260
+  },
+  "goal": {
+    "x": -80,
+    "y": -60,
+    "w": 60,
+    "h": 80
+  },
+  "objects": [
+    {
+      "t": "solid",
+      "x": -120,
+      "y": 300,
+      "w": 420,
+      "h": 220
+    },
+    {
+      "t": "solid",
+      "x": -120,
+      "y": 40,
+      "w": 420,
+      "h": 220
+    },
+    {
+      "t": "solid",
+      "x": 360,
+      "y": 300,
+      "w": 380,
+      "h": 220
+    },
+    {
+      "t": "bounce",
+      "x": 620,
+      "y": 260,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 340,
+      "y": 180,
+      "w": 60,
+      "h": 20,
+      "power": 780
+    },
+    {
+      "t": "solid",
+      "x": 340,
+      "y": 200,
+      "w": 60,
+      "h": 60
+    },
+    {
+      "t": "spike",
+      "x": -620,
+      "y": 760,
+      "w": 1720,
+      "h": 80
+    }
+  ]
+},
+
+
+{
+  "name": "Neues Level",
+  "settings": {
+    "bg": "dusk",
+    "gravity": 1700
+  },
+  "player": {
+    "x": 80,
+    "y": 260
+  },
+  "goal": {
+    "x": 660,
+    "y": -520,
+    "w": 60,
+    "h": 80
+  },
+  "objects": [
+    {
+      "t": "solid",
+      "x": -280,
+      "y": 320,
+      "w": 800,
+      "h": 320
+    },
+    {
+      "t": "solid",
+      "x": 200,
+      "y": 220,
+      "w": 320,
+      "h": 220
+    },
+    {
+      "t": "solid",
+      "x": 480,
+      "y": 140,
+      "w": 260,
+      "h": 500
+    },
+    {
+      "t": "solid",
+      "x": 720,
+      "y": 80,
+      "w": 280,
+      "h": 560
+    },
+    {
+      "t": "solid",
+      "x": 980,
+      "y": -20,
+      "w": 260,
+      "h": 660
+    },
+    {
+      "t": "coin",
+      "x": 320,
+      "y": 180,
+      "w": 18,
+      "h": 18
+    },
+    {
+      "t": "coin",
+      "x": 600,
+      "y": 100,
+      "w": 18,
+      "h": 18
+    },
+    {
+      "t": "coin",
+      "x": 860,
+      "y": 40,
+      "w": 18,
+      "h": 18
+    },
+    {
+      "t": "coin",
+      "x": 1100,
+      "y": -60,
+      "w": 18,
+      "h": 18
+    },
+    {
+      "t": "solid",
+      "x": 1380,
+      "y": -20,
+      "w": 260,
+      "h": 160
+    },
+    {
+      "t": "solid",
+      "x": 1400,
+      "y": 300,
+      "w": 240,
+      "h": 140
+    },
+    {
+      "t": "key",
+      "x": 1500,
+      "y": 260,
+      "w": 18,
+      "h": 18,
+      "keyId": "A"
+    },
+    {
+      "t": "bounce",
+      "x": 1660,
+      "y": 260,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1380,
+      "y": -40,
+      "w": 260,
+      "h": 40,
+      "power": 780
+    },
+    {
+      "t": "solid",
+      "x": 1260,
+      "y": -200,
+      "w": 120,
+      "h": 40
+    },
+    {
+      "t": "solid",
+      "x": 1140,
+      "y": -300,
+      "w": 120,
+      "h": 40
+    },
+    {
+      "t": "solid",
+      "x": 1040,
+      "y": -360,
+      "w": 100,
+      "h": 40
+    },
+    {
+      "t": "solid",
+      "x": 460,
+      "y": -420,
+      "w": 540,
+      "h": 40
+    },
+    {
+      "t": "door",
+      "x": 900,
+      "y": -540,
+      "w": 40,
+      "h": 120,
+      "keyId": "A"
+    },
+    {
+      "t": "coin",
+      "x": 800,
+      "y": -480,
+      "w": 18,
+      "h": 18
+    },
+    {
+      "t": "bounce",
+      "x": 1760,
+      "y": 120,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "door",
+      "x": 1580,
+      "y": 140,
+      "w": 60,
+      "h": 160,
+      "keyId": "A"
+    },
+    {
+      "t": "spike",
+      "x": -620,
+      "y": 820,
+      "w": 3160,
+      "h": 100
+    }
+  ]
+},
+
+
+{
+  "name": "Neues Level",
+  "settings": {
+    "bg": "dusk",
+    "gravity": 480
+  },
+  "player": {
+    "x": 80,
+    "y": 260
+  },
+  "goal": {
+    "x": -880,
+    "y": -1740,
+    "w": 60,
+    "h": 80
+  },
+  "objects": [
+    {
+      "t": "solid",
+      "x": -300,
+      "y": 320,
+      "w": 780,
+      "h": 220
+    },
+    {
+      "t": "bounce",
+      "x": 400,
+      "y": -40,
+      "w": 20,
+      "h": 20,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 740,
+      "y": -700,
+      "w": 20,
+      "h": 20,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 500,
+      "y": -1320,
+      "w": 20,
+      "h": 20,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": -280,
+      "y": -1520,
+      "w": 20,
+      "h": 20,
+      "power": 780
+    },
+    {
+      "t": "solid",
+      "x": -920,
+      "y": -1620,
+      "w": 160,
+      "h": 30
+    },
+    {
+      "t": "spike",
+      "x": -1800,
+      "y": 1020,
+      "w": 5000,
+      "h": 160
+    },
+    {
+      "t": "spike",
+      "x": 3140,
+      "y": 1020,
+      "w": 1480,
+      "h": 160
+    },
+    {
+      "t": "spike",
+      "x": -2300,
+      "y": 1020,
+      "w": 640,
+      "h": 120
+    },
+    {
+      "t": "spike",
+      "x": -2300,
+      "y": 1120,
+      "w": 600,
+      "h": 60
+    },
+    {
+      "t": "spike",
+      "x": -3160,
+      "y": 1020,
+      "w": 1000,
+      "h": 160
+    }
+  ]
+},
+
+{
+  "name": "Neues Level",
+  "settings": {
+    "bg": "dusk",
+    "gravity": 1700
+  },
+  "player": {
+    "x": 80,
+    "y": 260
+  },
+  "goal": {
+    "x": 580,
+    "y": 220,
+    "w": 60,
+    "h": 80
+  },
+  "objects": [
+    {
+      "t": "solid",
+      "x": -200,
+      "y": 300,
+      "w": 1100,
+      "h": 240
+    },
+    {
+      "t": "spike",
+      "x": -920,
+      "y": 940,
+      "w": 400,
+      "h": 100
+    },
+    {
+      "t": "spike",
+      "x": -620,
+      "y": 940,
+      "w": 2760,
+      "h": 100
+    },
+    {
+      "t": "spike",
+      "x": 220,
+      "y": 280,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 220,
+      "y": 120,
+      "w": 40,
+      "h": 40
+    }
+  ]
+},
+{
+  "name": "Neues Level",
+  "settings": {
+    "bg": "dusk",
+    "gravity": 1600
+  },
+  "player": {
+    "x": 80,
+    "y": 260
+  },
+  "goal": {
+    "x": -200,
+    "y": 200,
+    "w": 60,
+    "h": 80
+  },
+  "objects": [
+    {
+      "t": "solid",
+      "x": -300,
+      "y": 300,
+      "w": 800,
+      "h": 320
+    },
+    {
+      "t": "solid",
+      "x": -300,
+      "y": 300,
+      "w": 800,
+      "h": 320
+    },
+    {
+      "t": "spike",
+      "x": 260,
+      "y": 280,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 260,
+      "y": 120,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "solid",
+      "x": 720,
+      "y": -80,
+      "w": 660,
+      "h": 700
+    },
+    {
+      "t": "solid",
+      "x": 320,
+      "y": 900,
+      "w": 540,
+      "h": 40
+    },
+    {
+      "t": "coin",
+      "x": 600,
+      "y": 860,
+      "w": 18,
+      "h": 18
+    },
+    {
+      "t": "bounce",
+      "x": 1020,
+      "y": 960,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1340,
+      "y": 900,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1620,
+      "y": 740,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1460,
+      "y": 540,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1680,
+      "y": 320,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1460,
+      "y": 100,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "spike",
+      "x": 840,
+      "y": -100,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 840,
+      "y": -260,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "bounce",
+      "x": 600,
+      "y": -80,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 420,
+      "y": -240,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "solid",
+      "x": -100,
+      "y": -300,
+      "w": 380,
+      "h": 100
+    },
+    {
+      "t": "key",
+      "x": 140,
+      "y": -340,
+      "w": 18,
+      "h": 18,
+      "keyId": "A"
+    },
+    {
+      "t": "solid",
+      "x": -100,
+      "y": -620,
+      "w": 100,
+      "h": 360
+    },
+    {
+      "t": "solid",
+      "x": 200,
+      "y": -220,
+      "w": 80,
+      "h": 220
+    },
+    {
+      "t": "door",
+      "x": -60,
+      "y": 160,
+      "w": 60,
+      "h": 140,
+      "keyId": "A"
+    },
+    {
+      "t": "spike",
+      "x": -1440,
+      "y": 1000,
+      "w": 1980,
+      "h": 200
+    },
+    {
+      "t": "spike",
+      "x": 480,
+      "y": 1000,
+      "w": 3300,
+      "h": 200
+    }
+  ]
+},
+
+{
+  "name": "Neues Level",
+  "settings": {
+    "bg": "dusk",
+    "gravity": 1700
+  },
+  "player": {
+    "x": 80,
+    "y": 260
+  },
+  "goal": {
+    "x": 2500,
+    "y": 620,
+    "w": 60,
+    "h": 80
+  },
+  "objects": [
+    {
+      "t": "solid",
+      "x": -140,
+      "y": 300,
+      "w": 460,
+      "h": 220
+    },
+    {
+      "t": "solid",
+      "x": -160,
+      "y": 180,
+      "w": 180,
+      "h": 340
+    },
+    {
+      "t": "solid",
+      "x": 220,
+      "y": 180,
+      "w": 160,
+      "h": 340
+    },
+    {
+      "t": "solid",
+      "x": -160,
+      "y": 140,
+      "w": 340,
+      "h": 60
+    },
+    {
+      "t": "solid",
+      "x": 220,
+      "y": 140,
+      "w": 160,
+      "h": 60
+    },
+    {
+      "t": "bounce",
+      "x": 180,
+      "y": 280,
+      "w": 40,
+      "h": 20,
+      "power": 780
+    },
+    {
+      "t": "spike",
+      "x": -160,
+      "y": 120,
+      "w": 340,
+      "h": 40
+    },
+    {
+      "t": "solid",
+      "x": 540,
+      "y": 140,
+      "w": 760,
+      "h": 40
+    },
+    {
+      "t": "coin",
+      "x": 580,
+      "y": 100,
+      "w": 18,
+      "h": 18
+    },
+    {
+      "t": "spike",
+      "x": 620,
+      "y": 120,
+      "w": 220,
+      "h": 40
+    },
+    {
+      "t": "coin",
+      "x": 1000,
+      "y": 100,
+      "w": 18,
+      "h": 18
+    },
+    {
+      "t": "solid",
+      "x": 1000,
+      "y": 280,
+      "w": 320,
+      "h": 40
+    },
+    {
+      "t": "solid",
+      "x": 860,
+      "y": 740,
+      "w": 240,
+      "h": 80
+    },
+    {
+      "t": "bounce",
+      "x": 840,
+      "y": 440,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "solid",
+      "x": 460,
+      "y": 340,
+      "w": 240,
+      "h": 40
+    },
+    {
+      "t": "solid",
+      "x": 500,
+      "y": 360,
+      "w": 200,
+      "h": 260
+    },
+    {
+      "t": "solid",
+      "x": 360,
+      "y": 560,
+      "w": 160,
+      "h": 60
+    },
+    {
+      "t": "solid",
+      "x": 360,
+      "y": 480,
+      "w": 80,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 380,
+      "y": 460,
+      "w": 60,
+      "h": 20
+    },
+    {
+      "t": "solid",
+      "x": 340,
+      "y": 140,
+      "w": 220,
+      "h": 40
+    },
+    {
+      "t": "solid",
+      "x": 240,
+      "y": 780,
+      "w": 540,
+      "h": 140
+    },
+    {
+      "t": "spike",
+      "x": 600,
+      "y": 1220,
+      "w": 60,
+      "h": 100
+    },
+    {
+      "t": "solid",
+      "x": 1180,
+      "y": 900,
+      "w": 280,
+      "h": 80
+    },
+    {
+      "t": "bounce",
+      "x": 1540,
+      "y": 860,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1780,
+      "y": 780,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 2000,
+      "y": 700,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "key",
+      "x": 440,
+      "y": 540,
+      "w": 18,
+      "h": 18,
+      "keyId": "A"
+    },
+    {
+      "t": "spike",
+      "x": 820,
+      "y": 1220,
+      "w": 20,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 880,
+      "y": 580,
+      "w": 120,
+      "h": 30
+    },
+    {
+      "t": "spike",
+      "x": 1060,
+      "y": 580,
+      "w": 120,
+      "h": 30
+    },
+    {
+      "t": "spike",
+      "x": 1240,
+      "y": 580,
+      "w": 120,
+      "h": 30
+    },
+    {
+      "t": "spike",
+      "x": 1420,
+      "y": 580,
+      "w": 120,
+      "h": 30
+    },
+    {
+      "t": "spike",
+      "x": 1600,
+      "y": 580,
+      "w": 120,
+      "h": 30
+    },
+    {
+      "t": "door",
+      "x": 2240,
+      "y": 500,
+      "w": 100,
+      "h": 200,
+      "keyId": "A"
+    },
+    {
+      "t": "coin",
+      "x": 2380,
+      "y": 660,
+      "w": 18,
+      "h": 18
+    },
+    {
+      "t": "coin",
+      "x": 560,
+      "y": 300,
+      "w": 18,
+      "h": 18
+    },
+    {
+      "t": "solid",
+      "x": 2240,
+      "y": 700,
+      "w": 400,
+      "h": 80
+    },
+    {
+      "t": "spike",
+      "x": -1120,
+      "y": 1180,
+      "w": 4360,
+      "h": 160
+    },
+    {
+      "t": "spike",
+      "x": 3100,
+      "y": 1180,
+      "w": 800,
+      "h": 160
+    },
+    {
+      "t": "spike",
+      "x": 540,
+      "y": 760,
+      "w": 120,
+      "h": 30
+    },
+    {
+      "t": "spike",
+      "x": 700,
+      "y": 580,
+      "w": 120,
+      "h": 30
+    }
+  ]
+}
+];
+
+/* =========================
+   2) ENGINE SETUP
+   ========================= */
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+function resize(){ canvas.width = canvas.clientWidth * devicePixelRatio; canvas.height = canvas.clientHeight * devicePixelRatio; }
+addEventListener('resize', resize); resize();
+
+const ui = {
+  run: document.getElementById('runPill'),
+  lvl: document.getElementById('lvlPill'),
+  coin: document.getElementById('coinPill'),
+  keys: document.getElementById('keysPill'),
+  death: document.getElementById('deathPill'),
+};
+
+const keysDown = new Set();
+addEventListener('keydown', e => {
+  keysDown.add(e.key.toLowerCase());
+  if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key)) e.preventDefault();
+});
+addEventListener('keyup', e => keysDown.delete(e.key.toLowerCase()));
+
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const aabb = (A,B)=> A.x < B.x+B.w && A.x+A.w > B.x && A.y < B.y+B.h && A.y+A.h > B.y;
+
+function deepClone(o){ return JSON.parse(JSON.stringify(o)); }
+
+/* =========================
+   3) SPEEDRUN STATE
+   ========================= */
+let run = {
+  startedAt: null,     // performance.now() at run start
+  elapsedMs: 0,        // updated each frame
+  finished: false,
+};
+
+let levelIndex = 0;
+let level = null;
+
+let state = {
+  coins: 0,
+  keys: new Set(),   // multiple keyIds supported
+  deaths: 0,
+};
+
+let player = {
+  x: 50, y: 50, w: 28, h: 36,
+  vx: 0, vy: 0,
+  onGround: false,
+  groundedOnId: null,     // used for moving platform carry
+  spawnX: 50, spawnY: 50,
+  portalCooldown: 0
+};
+
+let cam = { x:0, y:0 };
+let tPrev = performance.now();
+
+function fmtTime(ms){
+  ms = Math.max(0, ms|0);
+  const m = Math.floor(ms/60000);
+  const s = Math.floor((ms%60000)/1000);
+  const mm = String(m).padStart(2,'0');
+  const ss = String(s).padStart(2,'0');
+  const mmm = String(ms%1000).padStart(3,'0');
+  return `${mm}:${ss}.${mmm}`;
+}
+
+function refreshUI(){
+  ui.run.textContent = `Run: ${fmtTime(run.elapsedMs)}${run.finished ? " ✅" : ""}`;
+  ui.lvl.textContent = `Level: ${levelIndex+1}/${LEVELS.length} — ${level?.name ?? ""}`;
+  ui.coin.textContent = `Coins: ${state.coins}`;
+  ui.keys.textContent = `Keys: ${state.keys.size ? [...state.keys].join(", ") : "—"}`;
+  ui.death.textContent = `Deaths: ${state.deaths}`;
+}
+
+function resetRun(){
+  run.startedAt = performance.now();
+  run.elapsedMs = 0;
+  run.finished = false;
+  state.deaths = 0;
+  loadLevel(0, /*resetLevelState*/true);
+}
+
+function loadLevel(idx, resetLevelState=false){
+  levelIndex = clamp(idx, 0, LEVELS.length-1);
+  level = deepClone(LEVELS[levelIndex]);
+
+  // Coins: keep across run if you want
+  // Keys: ALWAYS reset per level (your request)
+  if(resetLevelState){
+    state.coins = 0;
+  }
+  state.keys = new Set();   // ✅ keys only work within the current level
+
+  // per-level runtime init
+  for(const o of level.objects){
+    if(o.t === "moving"){
+      o._id = Math.random().toString(16).slice(2,10);
+      const pts = o.path || [[o.x,o.y],[o.x+100,o.y]];
+      o._i = 0;
+      o._dir = (o.dir===-1 ? -1 : 1);
+      o._mode = (o.mode==="pingpong" ? "pingpong" : "loop");
+      o._next = nextIndex(o._i, o._dir, pts.length, o._mode);
+      o._px = o.x; o._py = o.y;
+    }
+    if(o.t === "conveyor"){
+      if(o.force == null) o.force = 780;
+      if(o.dir == null) o.dir = 1;
+    }
+    if(o.t === "portal"){
+      if(o.w == null) o.w = 70;
+      if(o.h == null) o.h = 90;
+    }
+  }
+
+  player.x = level.player.x; player.y = level.player.y;
+  player.vx = 0; player.vy = 0;
+  player.onGround = false;
+  player.groundedOnId = null;
+  player.spawnX = player.x; player.spawnY = player.y;
+  player.portalCooldown = 0;
+
+  refreshUI();
+}
+
+
+function nextIndex(i, dir, n, mode){
+  if(n <= 1) return 0;
+  if(mode === "pingpong"){
+    // pingpong: bounce at ends (0..n-1)
+    const next = i + dir;
+    if(next < 0) return 1;
+    if(next >= n) return n-2;
+    return next;
+  }
+  // loop
+  return (i + dir + n) % n;
+}
+
+/* =========================
+   4) COLLISION (returns ground contact)
+   ========================= */
+function moveAndCollide(px, py, dx, dy, solids){
+  let x = px, y = py;
+  let onGround = false;
+  let groundedOnId = null;
+
+  // X
+  x += dx;
+  let box = {x, y, w: player.w, h: player.h};
+  for(const s of solids){
+    if(aabb(box, s)){
+      if(dx > 0) x = s.x - player.w;
+      if(dx < 0) x = s.x + s.w;
+      box.x = x;
+      player.vx = 0;
+    }
+  }
+
+  // Y
+  y += dy;
+  box = {x, y, w: player.w, h: player.h};
+  for(const s of solids){
+    if(aabb(box, s)){
+      if(dy > 0){
+        y = s.y - player.h;
+        onGround = true;
+        groundedOnId = s._id || null; // only moving platforms have _id
+      } else if(dy < 0){
+        // head bump (the bug was: being "carried" onto top from below; fixed by carry logic using groundedOnId)
+        y = s.y + s.h;
+      }
+      box.y = y;
+      player.vy = 0;
+    }
+  }
+
+  return {x, y, onGround, groundedOnId};
+}
+
+/* =========================
+   5) UPDATE LOOP
+   ========================= */
+function update(dt, now){
+  if(!level) return;
+
+  // timer
+  if(!run.startedAt) run.startedAt = now;
+  if(!run.finished){
+    run.elapsedMs = Math.floor(now - run.startedAt);
+  }
+
+  const settings = level.settings || {};
+  const gravityBase = settings.gravity ?? 1700;
+
+  // zones
+  let gMul = 1.0;
+  let inWater = false;
+  const pBoxNow = {x:player.x, y:player.y, w:player.w, h:player.h};
+
+  for(const o of level.objects){
+    if(o.t === "lowgrav" && aabb(pBoxNow, o)) gMul = Math.min(gMul, o.gMul ?? 0.5);
+    if(o.t === "water" && aabb(pBoxNow, o)) inWater = true;
+  }
+
+  const gravity = gravityBase * gMul * (inWater ? 0.35 : 1.0);
+  const accel = inWater ? 900 : 1700;
+  const maxSpeed = inWater ? 220 : 380;
+  const friction = player.onGround ? (inWater ? 0.86 : 0.78) : (inWater ? 0.94 : 0.98);
+
+  const left = keysDown.has('a') || keysDown.has('arrowleft');
+  const right = keysDown.has('d') || keysDown.has('arrowright');
+  const jump = keysDown.has('w') || keysDown.has('arrowup') || keysDown.has(' ');
+
+  // moving platforms: update position and remember deltas
+  let movingDeltaById = new Map();
+  for(const o of level.objects){
+    if(o.t !== "moving") continue;
+    const pts = o.path || [[o.x,o.y],[o.x+100,o.y]];
+    const speed = (o.speed ?? 1.0) * 120;
+
+    o._px = o.x; o._py = o.y;
+
+    const [tx, ty] = pts[o._next ?? 1];
+    const dx = tx - o.x, dy = ty - o.y;
+    const dist = Math.hypot(dx,dy) || 1;
+    const step = speed * dt;
+    const ux = dx/dist, uy = dy/dist;
+
+    if(step >= dist){
+      o.x = tx; o.y = ty;
+      // reached point -> decide next
+      const mode = o._mode || "loop";
+      if(mode === "pingpong"){
+        // if at end, flip dir
+        if(o._next === pts.length-1) o._dir = -1;
+        if(o._next === 0) o._dir = 1;
+      }
+      o._i = o._next;
+      o._next = nextIndex(o._i, o._dir, pts.length, mode);
+    } else {
+      o.x += ux * step;
+      o.y += uy * step;
+    }
+
+    const id = o._id;
+    movingDeltaById.set(id, {dx: o.x - o._px, dy: o.y - o._py});
+  }
+
+  // input accel
+  if(left) player.vx -= accel * dt;
+  if(right) player.vx += accel * dt;
+  player.vx = clamp(player.vx, -maxSpeed, maxSpeed);
+
+  // jump
+  if(jump && player.onGround){
+    player.vy = inWater ? -520 : -640;
+    player.onGround = false;
+    player.groundedOnId = null;
+  }
+
+  // gravity + friction
+  player.vy += gravity * dt;
+  player.vy = clamp(player.vy, -2000, 2000);
+  if(!left && !right) player.vx *= friction;
+
+  // conveyor + carry should happen AFTER collision decides ground contact
+  // build solids list (solid + moving + conveyor + locked doors)
+  const solids = [];
+  for(const o of level.objects){
+    if(o.t === "solid" || o.t === "moving" || o.t === "conveyor"){
+      solids.push(o);
+    }
+    if(o.t === "door"){
+      const id = (o.keyId ?? "A").toString();
+      if(!state.keys.has(id)){
+        solids.push(o);
+      }
+    }
+  }
+
+  // move + collide
+  const res = moveAndCollide(player.x, player.y, player.vx*dt, player.vy*dt, solids);
+  player.x = res.x; player.y = res.y;
+  const justLanded = (!player.onGround && res.onGround);
+  player.onGround = res.onGround;
+  player.groundedOnId = res.groundedOnId;
+
+  // carry by moving platform ONLY if actually grounded on it
+  if(player.onGround && player.groundedOnId && movingDeltaById.has(player.groundedOnId)){
+    const d = movingDeltaById.get(player.groundedOnId);
+    player.x += d.dx;
+    player.y += d.dy;
+  }
+
+  // conveyors (stronger)
+  if(player.onGround){
+    const pFeet = {x:player.x, y:player.y+1, w:player.w, h:player.h};
+    for(const o of level.objects){
+      if(o.t !== "conveyor") continue;
+      const onTop = (player.y + player.h <= o.y + 3) && aabb(pFeet, o);
+      if(onTop){
+        const dir = (o.dir === -1 ? -1 : 1);
+        const force = (o.force ?? 780);
+        // apply as acceleration + clamp extra speed
+        player.vx += dir * force * dt;
+        const cap = maxSpeed * 1.9;
+        player.vx = clamp(player.vx, -cap, cap);
+      }
+    }
+  }
+
+  // portal cooldown
+  if(player.portalCooldown > 0) player.portalCooldown -= dt;
+
+  // interactions
+  const p = {x:player.x, y:player.y, w:player.w, h:player.h};
+  for(const o of level.objects){
+    if(o.t === "spike" && aabb(p, o)){ die(); return; }
+
+    if(o.t === "coin" && !o._got && aabb(p, {x:o.x, y:o.y, w:18, h:18})){
+      o._got = true;
+      state.coins++;
+      refreshUI();
+    }
+
+    if(o.t === "bounce" && aabb(p, o)){
+      if(player.vy > 0) player.vy = -(o.power ?? 780);
+    }
+
+    if(o.t === "key" && !o._got && aabb(p, {x:o.x, y:o.y, w:18, h:18})){
+      o._got = true;
+      const id = (o.keyId ?? "A").toString();
+      state.keys.add(id);
+      refreshUI();
+    }
+
+    if(o.t === "portal" && o.to && player.portalCooldown <= 0 && aabb(p, o)){
+      player.x = o.to[0];
+      player.y = o.to[1];
+      player.vx *= 0.35;
+      player.vy *= 0.35;
+      player.portalCooldown = 0.25; // prevents instant re-teleport
+    }
+  }
+
+  // goal -> next level OR finish run
+  if(level.goal && aabb(p, level.goal)){
+    if(levelIndex < LEVELS.length - 1){
+      loadLevel(levelIndex + 1, /*resetLevelState*/false);
+    } else {
+      run.finished = true;
+      refreshUI();
+    }
+    return;
+  }
+
+  // fall death
+  if(player.y > 4000) die();
+
+  // camera
+  const vw = canvas.width/devicePixelRatio;
+  const vh = canvas.height/devicePixelRatio;
+  const targetX = player.x - vw/2 + player.w/2;
+  const targetY = player.y - vh/2 + player.h/2;
+  cam.x += (targetX - cam.x) * (1 - Math.pow(0.001, dt));
+  cam.y += (targetY - cam.y) * (1 - Math.pow(0.001, dt));
+}
+
+function die(){
+  state.deaths++;
+  refreshUI();
+  player.x = player.spawnX;
+  player.y = player.spawnY;
+  player.vx = 0; player.vy = 0;
+  player.onGround = false;
+  player.groundedOnId = null;
+  player.portalCooldown = 0;
+}
+
+/* =========================
+   6) RENDER
+   ========================= */
+function roundRect(x,y,w,h,r,fill=true,stroke=false){
+  r = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+  if(fill) ctx.fill();
+  if(stroke) ctx.stroke();
+}
+function drawCoin(x,y){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle="#e9c46a";
+  ctx.beginPath(); ctx.arc(9,9,9,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=0.35; ctx.fillStyle="#f2e9e4";
+  ctx.beginPath(); ctx.arc(7,7,4,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+function drawKey(x,y){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle="#ffd6a5";
+  ctx.fillRect(2,8,14,4);
+  ctx.beginPath(); ctx.arc(18,10,6,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle="#1a1412"; ctx.globalAlpha=0.25;
+  ctx.beginPath(); ctx.arc(18,10,2.5,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=1;
+  ctx.restore();
+}
+function draw(){
+  if(!level) return;
+
+  const theme = (level.settings?.bg ?? "dusk");
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  const vw = canvas.width/devicePixelRatio, vh = canvas.height/devicePixelRatio;
+
+  // background
+  if(theme==="temple"){
+    ctx.fillStyle="#1b1716"; ctx.fillRect(0,0,vw,vh);
+    ctx.globalAlpha=0.18; ctx.fillStyle="#c09f80";
+    for(let i=0;i<14;i++){ ctx.fillRect((i*160 - (cam.x*0.15)%160), 40+i*18, 120, 6); }
+  } else {
+    ctx.fillStyle="#15100f"; ctx.fillRect(0,0,vw,vh);
+    ctx.globalAlpha=0.14; ctx.fillStyle="#7f5a3a";
+    for(let i=0;i<12;i++){ ctx.fillRect((i*180 - (cam.x*0.12)%180), 60+i*22, 140, 6); }
+  }
+  ctx.globalAlpha=1;
+
+  // world
+  ctx.translate(-cam.x, -cam.y);
+
+  for(const o of level.objects){
+    if(o.t === "coin" && o._got) continue;
+    if(o.t === "key" && o._got) continue;
+
+    if(o.t === "solid"){
+      ctx.fillStyle="#4a3a33"; roundRect(o.x,o.y,o.w,o.h,10,true);
+    } else if(o.t === "moving"){
+      ctx.fillStyle="#6b4f3a"; roundRect(o.x,o.y,o.w,o.h,10,true);
+      ctx.globalAlpha=0.25; ctx.fillStyle="#ffd6a5"; roundRect(o.x+6,o.y+5,o.w-12,4,4,true); ctx.globalAlpha=1;
+    } else if(o.t === "conveyor"){
+      ctx.fillStyle="#3d2c2e"; roundRect(o.x,o.y,o.w,o.h,10,true);
+      ctx.globalAlpha=0.55; ctx.fillStyle="#ffd6a5";
+      const dir = (o.dir===-1 ? -1 : 1);
+      for(let x=o.x+10; x<o.x+o.w-10; x+=26){
+        const y=o.y+o.h/2;
+        ctx.beginPath();
+        if(dir>0){ ctx.moveTo(x, y); ctx.lineTo(x+10, y-6); ctx.lineTo(x+10, y+6); }
+        else { ctx.moveTo(x+10, y); ctx.lineTo(x, y-6); ctx.lineTo(x, y+6); }
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.globalAlpha=1;
+    } else if(o.t === "spike"){
+      ctx.fillStyle="#c1121f";
+      const n = Math.max(2, Math.floor(o.w/18));
+      for(let i=0;i<n;i++){
+        const sx = o.x + i*(o.w/n);
+        const sw = (o.w/n);
+        ctx.beginPath();
+        ctx.moveTo(sx, o.y+o.h);
+        ctx.lineTo(sx+sw/2, o.y);
+        ctx.lineTo(sx+sw, o.y+o.h);
+        ctx.closePath();
+        ctx.fill();
+      }
+    } else if(o.t === "bounce"){
+      ctx.fillStyle="#2a9d8f"; roundRect(o.x,o.y,o.w,o.h,12,true);
+      ctx.globalAlpha=0.35; ctx.fillStyle="#e9c46a"; roundRect(o.x+6,o.y+6,o.w-12,o.h-12,10,true); ctx.globalAlpha=1;
+    } else if(o.t === "lowgrav"){
+      ctx.globalAlpha=0.16; ctx.fillStyle="#90e0ef"; roundRect(o.x,o.y,o.w,o.h,16,true); ctx.globalAlpha=1;
+    } else if(o.t === "water"){
+      ctx.globalAlpha=0.18; ctx.fillStyle="#4cc9f0"; roundRect(o.x,o.y,o.w,o.h,16,true); ctx.globalAlpha=1;
+    } else if(o.t === "coin"){
+      drawCoin(o.x,o.y);
+    } else if(o.t === "key"){
+      drawKey(o.x,o.y);
+      ctx.globalAlpha=0.9; ctx.fillStyle="#f2e9e4"; ctx.font="12px system-ui";
+      ctx.fillText(String(o.keyId ?? "A"), o.x+24, o.y+14); ctx.globalAlpha=1;
+    } else if(o.t === "door"){
+      const id = String(o.keyId ?? "A");
+      const locked = !state.keys.has(id);
+      ctx.fillStyle = locked ? "#5a3d2b" : "#2f2420";
+      roundRect(o.x,o.y,o.w,o.h,12,true);
+      ctx.globalAlpha=0.8; ctx.fillStyle="#ffd6a5"; ctx.font="12px system-ui";
+      ctx.fillText(id, o.x+8, o.y+18);
+      ctx.globalAlpha=1;
+    } else if(o.t === "portal"){
+      ctx.globalAlpha=0.18; ctx.fillStyle="#9b5de5"; roundRect(o.x,o.y,o.w,o.h,18,true);
+      ctx.globalAlpha=1;
+      ctx.strokeStyle="#f2e9e4"; ctx.globalAlpha=0.35; ctx.lineWidth=2;
+      roundRect(o.x+6,o.y+6,o.w-12,o.h-12,16,false,true);
+      ctx.globalAlpha=1;
+    } else if(o.t === "sign"){
+      ctx.fillStyle="#3a2a24"; roundRect(o.x,o.y,240,44,12,true);
+      ctx.fillStyle="#f2e9e4"; ctx.globalAlpha=0.9; ctx.font="14px system-ui";
+      ctx.fillText(o.text ?? "…", o.x+12, o.y+27);
+      ctx.globalAlpha=1;
+    }
+  }
+
+  if(level.goal){
+    ctx.globalAlpha=0.22; ctx.fillStyle="#ffd6a5";
+    roundRect(level.goal.x, level.goal.y, level.goal.w, level.goal.h, 16, true);
+    ctx.globalAlpha=1;
+    ctx.fillStyle="#f2e9e4"; ctx.font="14px system-ui";
+    ctx.fillText(levelIndex === LEVELS.length-1 ? "FINISH" : "ZIEL", level.goal.x+10, level.goal.y+24);
+  }
+
+  // player
+  ctx.fillStyle="#f2e9e4"; roundRect(player.x, player.y, player.w, player.h, 10, true);
+  ctx.globalAlpha=0.6; ctx.fillStyle="#1a1412";
+  ctx.fillRect(player.x+7, player.y+12, 4, 4);
+  ctx.fillRect(player.x+player.w-11, player.y+12, 4, 4);
+  ctx.globalAlpha=1;
+
+  ctx.restore();
+}
+
+/* =========================
+   7) LOOP + UI
+   ========================= */
+function loop(now){
+  const dt = clamp((now - tPrev)/1000, 0, 1/20);
+  tPrev = now;
+
+  if(keysDown.has('r')) loadLevel(levelIndex, /*resetLevelState*/false);
+
+  update(dt, now);
+  draw();
+  refreshUI();
+
+  requestAnimationFrame(loop);
+}
+
+document.getElementById('btnRestart').onclick = ()=> loadLevel(levelIndex, false);
+document.getElementById('btnResetRun').onclick = ()=> resetRun();
+
+function init(){
+  resetRun();
+  requestAnimationFrame(loop);
+}
+init();
+</script>
+</body>
+</html>
