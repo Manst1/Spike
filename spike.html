@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Spike</title>
-  <link rel="icon" type="image/png" href="https://i.imgur.com/VtHqQHA.png">  
+  <link rel="icon" type="image/png" href="https://i.imgur.com/VtHqQHA.png">
   <style>
     html, body { height:100%; margin:0; background:#1a1412; color:#f2e9e4; font-family:system-ui,Segoe UI,Roboto,Arial; }
     .wrap { display:grid; grid-template-rows:auto 1fr auto; height:100%; }
@@ -22,6 +22,119 @@
     .hint { opacity:.9; font-size:13px; }
     .small { font-size:12px; opacity:.85; }
     code { opacity:.9; }
+
+    /* =========================
+       OVERLAYS
+       ========================= */
+    .overlay {
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.55);
+      backdrop-filter: blur(6px);
+      z-index:50;
+    }
+    .overlay.hidden { display:none; }
+
+    .panel {
+      width:min(720px, 92vw);
+      background:rgba(36, 28, 25, .92);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      box-shadow:0 20px 80px rgba(0,0,0,.55);
+      padding:18px 18px 14px;
+    }
+    .panel h2 { margin:0 0 8px; font-size:18px; }
+    .panel p { margin:0 0 14px; opacity:.9; font-size:13px; }
+    .skins { display:flex; gap:12px; flex-wrap:wrap; }
+    .skinBtn{
+      width:150px;
+      display:flex; flex-direction:column; align-items:center; gap:10px;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:#2f2420;
+      cursor:pointer;
+      transition: transform .12s ease, filter .12s ease;
+      user-select:none;
+    }
+    .skinBtn:hover{ transform: translateY(-2px); filter:brightness(1.06); }
+    .skinLabel{ font-size:12px; opacity:.92; }
+
+    .preview {
+      width:64px; height:84px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.16);
+      background:#1a1412;
+      overflow:hidden;
+      display:grid; place-items:center;
+    }
+    .preview img{
+      width:100%; height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .preview .defaultGuy{
+      width:46px; height:62px;
+      border-radius:16px;
+      background:#f2e9e4;
+      position:relative;
+    }
+    .preview .defaultGuy:before,
+    .preview .defaultGuy:after{
+      content:"";
+      position:absolute;
+      width:6px; height:6px;
+      top:18px;
+      background:#1a1412;
+      opacity:.65;
+      border-radius:2px;
+    }
+    .preview .defaultGuy:before{ left:12px; }
+    .preview .defaultGuy:after{ right:12px; }
+
+    /* 500 deaths / secret message */
+    .bigToast {
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      z-index:60;
+      pointer-events:none;
+      background:rgba(0,0,0,0);
+      opacity:0;
+    }
+    .bigToast.show {
+      animation: toastInOut 3.5s ease forwards;
+    }
+    .bigToast .msg{
+      padding:22px 26px;
+      border-radius:22px;
+      background:rgba(18, 12, 11, .72);
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 18px 90px rgba(0,0,0,.65);
+      text-align:center;
+      transform: translateY(6px) scale(.98);
+    }
+    .bigToast .msg b{
+      display:block;
+      font-size:min(54px, 9vw);
+      letter-spacing:.5px;
+      text-shadow:
+        0 2px 0 rgba(0,0,0,.45),
+        0 0 18px rgba(255,214,165,.18),
+        0 0 44px rgba(193,18,31,.12);
+    }
+    .bigToast .msg span{
+      display:block;
+      margin-top:8px;
+      font-size:13px;
+      opacity:.85;
+    }
+    @keyframes toastInOut{
+      0%   { opacity:0; background:rgba(0,0,0,0); }
+      12%  { opacity:1; background:rgba(0,0,0,.55); }
+      20%  { opacity:1; }
+      80%  { opacity:1; }
+      100% { opacity:0; background:rgba(0,0,0,0); }
+    }
   </style>
 </head>
 <body>
@@ -54,6 +167,38 @@
       Level baust du mit <code>editor.html</code> und kopierst den Export hier rein.
     </div>
   </footer>
+</div>
+
+<!-- Player Skin Select (before game starts) -->
+<div class="overlay" id="skinOverlay">
+  <div class="panel">
+    <h2>Spieler-Icon auswählen</h2>
+    <p>Wähle dein Aussehen. Form bleibt wie der Standard-Player (gleiche Hitbox).</p>
+    <div class="skins">
+      <div class="skinBtn" data-skin="default">
+        <div class="preview"><div class="defaultGuy"></div></div>
+        <div class="skinLabel">Standard</div>
+      </div>
+
+      <div class="skinBtn" data-skin="img1">
+        <div class="preview"><img alt="Albania" src="https://i.imgur.com/vcofenW.png"></div>
+        <div class="skinLabel">Albania</div>
+      </div>
+
+      <div class="skinBtn" data-skin="img2">
+        <div class="preview"><img alt="Austria" src="https://i.imgur.com/cXMg1nC.png"></div>
+        <div class="skinLabel">Austria</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Big message overlay -->
+<div class="bigToast" id="bigToast">
+  <div class="msg">
+    <b id="bigToastText">Du hast 500 Tode erreicht!</b>
+    <span></span>
+  </div>
 </div>
 
 <script>
@@ -2000,6 +2145,207 @@ const LEVELS = [
       "h": 220
     }
   ]
+},
+
+{
+  "name": "Neues Level",
+  "settings": {
+    "bg": "dusk",
+    "gravity": 1700
+  },
+  "player": {
+    "x": 80,
+    "y": 260
+  },
+  "goal": {
+    "x": -40,
+    "y": -180,
+    "w": 60,
+    "h": 80
+  },
+  "objects": [
+    {
+      "t": "solid",
+      "x": -140,
+      "y": 300,
+      "w": 800,
+      "h": 180
+    },
+    {
+      "t": "spike",
+      "x": 180,
+      "y": 280,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 180,
+      "y": 120,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 380,
+      "y": 280,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 380,
+      "y": 120,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "solid",
+      "x": 780,
+      "y": -80,
+      "w": 340,
+      "h": 640
+    },
+    {
+      "t": "solid",
+      "x": 520,
+      "y": 400,
+      "w": 140,
+      "h": 440
+    },
+    {
+      "t": "solid",
+      "x": 780,
+      "y": 680,
+      "w": 1140,
+      "h": 160
+    },
+    {
+      "t": "spike",
+      "x": 1220,
+      "y": 660,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 1300,
+      "y": 660,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 1380,
+      "y": 660,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "bounce",
+      "x": 1840,
+      "y": 660,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1760,
+      "y": 480,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1620,
+      "y": 300,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1480,
+      "y": 140,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "bounce",
+      "x": 1300,
+      "y": 0,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "spike",
+      "x": 1460,
+      "y": 660,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 1540,
+      "y": 660,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 1620,
+      "y": 660,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 940,
+      "y": -100,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 940,
+      "y": -260,
+      "w": 40,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": -1060,
+      "y": 920,
+      "w": 5000,
+      "h": 360
+    },
+    {
+      "t": "bounce",
+      "x": 680,
+      "y": -80,
+      "w": 50,
+      "h": 30,
+      "power": 780
+    },
+    {
+      "t": "solid",
+      "x": -160,
+      "y": -100,
+      "w": 700,
+      "h": 40
+    },
+    {
+      "t": "spike",
+      "x": 180,
+      "y": -120,
+      "w": 240,
+      "h": 20
+    }
+  ]
 }
 ];
 
@@ -2022,6 +2368,9 @@ const ui = {
 const keysDown = new Set();
 addEventListener('keydown', e => {
   keysDown.add(e.key.toLowerCase());
+  // for secret typing buffer (works without input field)
+  captureTypedKey(e);
+
   if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(e.key)) e.preventDefault();
 });
 addEventListener('keyup', e => keysDown.delete(e.key.toLowerCase()));
@@ -2030,6 +2379,43 @@ const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
 const aabb = (A,B)=> A.x < B.x+B.w && A.x+A.w > B.x && A.y < B.y+B.h && A.y+A.h > B.y;
 
 function deepClone(o){ return JSON.parse(JSON.stringify(o)); }
+
+/* =========================
+   2.1) PLAYER SKINS (pre-game)
+   ========================= */
+const skinOverlay = document.getElementById('skinOverlay');
+const bigToast = document.getElementById('bigToast');
+const bigToastText = document.getElementById('bigToastText');
+
+let gameStarted = false;
+
+const SKINS = {
+  default: { type:"default" },
+  img1:    { type:"img", url:"https://i.imgur.com/vcofenW.png" },
+  img2:    { type:"img", url:"https://i.imgur.com/cXMg1nC.png" },
+};
+
+let selectedSkinKey = "default";
+let selectedSkin = SKINS[selectedSkinKey];
+
+// preload images
+const skinImages = new Map();
+for(const [k, s] of Object.entries(SKINS)){
+  if(s.type === "img"){
+    const img = new Image();
+    img.src = s.url;
+    skinImages.set(k, img);
+  }
+}
+
+for(const btn of document.querySelectorAll('.skinBtn')){
+  btn.addEventListener('click', () => {
+    selectedSkinKey = btn.dataset.skin || "default";
+    selectedSkin = SKINS[selectedSkinKey] || SKINS.default;
+    skinOverlay.classList.add('hidden');
+    startGame();
+  });
+}
 
 /* =========================
    3) SPEEDRUN STATE
@@ -2047,6 +2433,10 @@ let state = {
   coins: 0,
   keys: new Set(),   // multiple keyIds supported
   deaths: 0,
+};
+
+let flags = {
+  shown500: false
 };
 
 let player = {
@@ -2084,6 +2474,7 @@ function resetRun(){
   run.elapsedMs = 0;
   run.finished = false;
   state.deaths = 0;
+  flags.shown500 = false;
   loadLevel(0, /*resetLevelState*/true);
 }
 
@@ -2129,18 +2520,51 @@ function loadLevel(idx, resetLevelState=false){
   refreshUI();
 }
 
-
 function nextIndex(i, dir, n, mode){
   if(n <= 1) return 0;
   if(mode === "pingpong"){
-    // pingpong: bounce at ends (0..n-1)
     const next = i + dir;
     if(next < 0) return 1;
     if(next >= n) return n-2;
     return next;
   }
-  // loop
   return (i + dir + n) % n;
+}
+
+/* =========================
+   3.1) BIG MESSAGE (500 deaths / secret)
+   ========================= */
+let toastTimer = null;
+function showBigMessage(text){
+  bigToastText.textContent = text;
+  bigToast.classList.remove('show'); // reset animation
+  // force reflow so animation restarts reliably
+  void bigToast.offsetWidth;
+  bigToast.classList.add('show');
+
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    bigToast.classList.remove('show');
+  }, 3500);
+}
+
+/* secret typing: "Sulten" */
+let typedBuf = "";
+let typedLastAt = 0;
+function captureTypedKey(e){
+  // ignore modifier combos
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key;
+  if(k.length !== 1) return;               // only printable chars
+  const now = performance.now();
+  if(now - typedLastAt > 1200) typedBuf = ""; // pause resets buffer
+  typedLastAt = now;
+
+  typedBuf = (typedBuf + k).slice(-20);
+  if(typedBuf.toLowerCase().includes("sulten")){
+    typedBuf = "";
+    showBigMessage("Du hast 500 Tode erreicht!");
+  }
 }
 
 /* =========================
@@ -2171,9 +2595,8 @@ function moveAndCollide(px, py, dx, dy, solids){
       if(dy > 0){
         y = s.y - player.h;
         onGround = true;
-        groundedOnId = s._id || null; // only moving platforms have _id
+        groundedOnId = s._id || null;
       } else if(dy < 0){
-        // head bump (the bug was: being "carried" onto top from below; fixed by carry logic using groundedOnId)
         y = s.y + s.h;
       }
       box.y = y;
@@ -2235,10 +2658,8 @@ function update(dt, now){
 
     if(step >= dist){
       o.x = tx; o.y = ty;
-      // reached point -> decide next
       const mode = o._mode || "loop";
       if(mode === "pingpong"){
-        // if at end, flip dir
         if(o._next === pts.length-1) o._dir = -1;
         if(o._next === 0) o._dir = 1;
       }
@@ -2270,7 +2691,6 @@ function update(dt, now){
   player.vy = clamp(player.vy, -2000, 2000);
   if(!left && !right) player.vx *= friction;
 
-  // conveyor + carry should happen AFTER collision decides ground contact
   // build solids list (solid + moving + conveyor + locked doors)
   const solids = [];
   for(const o of level.objects){
@@ -2288,7 +2708,6 @@ function update(dt, now){
   // move + collide
   const res = moveAndCollide(player.x, player.y, player.vx*dt, player.vy*dt, solids);
   player.x = res.x; player.y = res.y;
-  const justLanded = (!player.onGround && res.onGround);
   player.onGround = res.onGround;
   player.groundedOnId = res.groundedOnId;
 
@@ -2308,7 +2727,6 @@ function update(dt, now){
       if(onTop){
         const dir = (o.dir === -1 ? -1 : 1);
         const force = (o.force ?? 780);
-        // apply as acceleration + clamp extra speed
         player.vx += dir * force * dt;
         const cap = maxSpeed * 1.9;
         player.vx = clamp(player.vx, -cap, cap);
@@ -2346,7 +2764,7 @@ function update(dt, now){
       player.y = o.to[1];
       player.vx *= 0.35;
       player.vy *= 0.35;
-      player.portalCooldown = 0.25; // prevents instant re-teleport
+      player.portalCooldown = 0.25;
     }
   }
 
@@ -2376,6 +2794,13 @@ function update(dt, now){
 function die(){
   state.deaths++;
   refreshUI();
+
+  // ✅ message after 500 deaths (exactly once per run)
+  if(state.deaths >= 500 && !flags.shown500){
+    flags.shown500 = true;
+    showBigMessage("Du hast 500 Tode erreicht!");
+  }
+
   player.x = player.spawnX;
   player.y = player.spawnY;
   player.vx = 0; player.vy = 0;
@@ -2387,7 +2812,7 @@ function die(){
 /* =========================
    6) RENDER
    ========================= */
-function roundRect(x,y,w,h,r,fill=true,stroke=false){
+function roundRectPath(x,y,w,h,r){
   r = Math.min(r, w/2, h/2);
   ctx.beginPath();
   ctx.moveTo(x+r,y);
@@ -2396,6 +2821,9 @@ function roundRect(x,y,w,h,r,fill=true,stroke=false){
   ctx.arcTo(x,y+h,x,y,r);
   ctx.arcTo(x,y,x+w,y,r);
   ctx.closePath();
+}
+function roundRect(x,y,w,h,r,fill=true,stroke=false){
+  roundRectPath(x,y,w,h,r);
   if(fill) ctx.fill();
   if(stroke) ctx.stroke();
 }
@@ -2419,6 +2847,42 @@ function drawKey(x,y){
   ctx.globalAlpha=1;
   ctx.restore();
 }
+
+function drawPlayer(){
+  const r = 10;
+
+  // base shape (hitbox same)
+  if(selectedSkin?.type === "img"){
+    const img = skinImages.get(selectedSkinKey);
+    if(img && img.complete && img.naturalWidth > 0){
+      ctx.save();
+      // clip to rounded rect so it stays same shape as default player
+      roundRectPath(player.x, player.y, player.w, player.h, r);
+      ctx.clip();
+      ctx.drawImage(img, player.x, player.y, player.w, player.h);
+      ctx.restore();
+
+      // subtle outline + eyes (optional vibe)
+      ctx.globalAlpha=0.45;
+      ctx.strokeStyle="#f2e9e4"; ctx.lineWidth=1.5;
+      roundRect(player.x, player.y, player.w, player.h, r, false, true);
+      ctx.globalAlpha=0.6; ctx.fillStyle="#1a1412";
+      ctx.fillRect(player.x+7, player.y+12, 4, 4);
+      ctx.fillRect(player.x+player.w-11, player.y+12, 4, 4);
+      ctx.globalAlpha=1;
+      return;
+    }
+    // fallback if image not loaded yet -> default
+  }
+
+  // default player
+  ctx.fillStyle="#f2e9e4"; roundRect(player.x, player.y, player.w, player.h, r, true);
+  ctx.globalAlpha=0.6; ctx.fillStyle="#1a1412";
+  ctx.fillRect(player.x+7, player.y+12, 4, 4);
+  ctx.fillRect(player.x+player.w-11, player.y+12, 4, 4);
+  ctx.globalAlpha=1;
+}
+
 function draw(){
   if(!level) return;
 
@@ -2521,12 +2985,8 @@ function draw(){
     ctx.fillText(levelIndex === LEVELS.length-1 ? "FINISH" : "ZIEL", level.goal.x+10, level.goal.y+24);
   }
 
-  // player
-  ctx.fillStyle="#f2e9e4"; roundRect(player.x, player.y, player.w, player.h, 10, true);
-  ctx.globalAlpha=0.6; ctx.fillStyle="#1a1412";
-  ctx.fillRect(player.x+7, player.y+12, 4, 4);
-  ctx.fillRect(player.x+player.w-11, player.y+12, 4, 4);
-  ctx.globalAlpha=1;
+  // player (with skin)
+  drawPlayer();
 
   ctx.restore();
 }
@@ -2550,15 +3010,22 @@ function loop(now){
 document.getElementById('btnRestart').onclick = ()=> loadLevel(levelIndex, false);
 document.getElementById('btnResetRun').onclick = ()=> resetRun();
 
-function init(){
+/* =========================
+   START: wait for skin selection
+   ========================= */
+function startGame(){
+  if(gameStarted) return;
+  gameStarted = true;
   resetRun();
   requestAnimationFrame(loop);
+}
+
+// show selection screen first
+function init(){
+  // nothing starts until you pick a skin
+  skinOverlay.classList.remove('hidden');
 }
 init();
 </script>
 </body>
 </html>
-
-
-
-
